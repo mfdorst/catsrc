@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::io::{self, Read};
+use std::io;
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -12,17 +12,20 @@ fn main() -> io::Result<()> {
 
     let dir_path = &args[1];
 
+    let ignored = vec!["lock"];
+
     for entry in fs::read_dir(dir_path)? {
         let entry = entry?;
         let path = entry.path();
 
-        if path.is_file() {
-            let mut file = fs::File::open(&path)?;
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)?;
-
+        if path.is_file()
+            && path
+                .extension()
+                .map_or(true, |ext| !ignored.contains(&ext.to_str().unwrap()))
+        {
             let filename = path.file_name().unwrap().to_string_lossy();
             let extension = path.extension().map(|ext| ext.to_str().unwrap());
+            let contents = fs::read_to_string(&path)?;
 
             let (lang, comment_start, comment_end) = match extension {
                 Some("rs") => ("rust", "//", ""),
