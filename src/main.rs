@@ -1,7 +1,6 @@
 use std::env;
 use std::fs;
 use std::io::{self, Read};
-use std::path::Path;
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -22,15 +21,25 @@ fn main() -> io::Result<()> {
             let mut contents = String::new();
             file.read_to_string(&mut contents)?;
 
-            let code_block_type = if path.extension().map_or(false, |ext| ext == "rs") {
-                let filename = path.file_name().unwrap().to_string_lossy();
-                format!("rust\n// {}\n", filename)
-            } else {
-                String::new()
-            };
+            let (language, comment_start, comment_end) =
+                match path.extension().map(|ext| ext.to_str().unwrap_or("")) {
+                    Some("rs") => ("rust", "//", ""),
+                    Some("sh" | "bash") => ("bash", "#", ""),
+                    Some("py") => ("python", "#", ""),
+                    Some("js") => ("javascript", "//", ""),
+                    Some("ts") => ("typescript", "//", ""),
+                    Some("jsx") => ("jsx", "//", ""),
+                    Some("html") => ("html", "<!--", " -->"),
+                    Some("css") => ("css", "/*", " */"),
+                    Some("nix") => ("nix", "#", ""),
+                    _ => ("", "#", ""),
+                };
 
-            println!("```{}", code_block_type);
-            println!("{}", contents);
+            let filename = path.file_name().unwrap().to_string_lossy();
+
+            println!("```{language}");
+            println!("{comment_start} {filename}{comment_end}");
+            println!("{contents}");
             println!("```");
         }
     }
