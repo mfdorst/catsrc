@@ -1,6 +1,4 @@
-use std::env;
-use std::fs;
-use std::io;
+use std::{env, fs, io};
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -12,19 +10,18 @@ fn main() -> io::Result<()> {
 
     let dir_path = &args[1];
 
-    let ignored = vec!["lock"];
+    let ignored_files = vec![".gitignore"];
+    let ignored_extensions = vec!["lock"];
 
     for entry in fs::read_dir(dir_path)? {
-        let entry = entry?;
-        let path = entry.path();
+        let path = entry?.path();
+        let extension = path.extension().map(|ext| ext.to_str().unwrap());
+        let filename = path.file_name().unwrap().to_string_lossy().into_owned();
 
-        if path.is_file()
-            && path
-                .extension()
-                .map_or(true, |ext| !ignored.contains(&ext.to_str().unwrap()))
-        {
-            let filename = path.file_name().unwrap().to_string_lossy();
-            let extension = path.extension().map(|ext| ext.to_str().unwrap());
+        let is_ignored = ignored_extensions.contains(&extension.unwrap_or_default())
+            || ignored_files.contains(&filename.as_str());
+
+        if path.is_file() && !is_ignored {
             let contents = fs::read_to_string(&path)?;
 
             let (lang, comment_start, comment_end) = match extension {
