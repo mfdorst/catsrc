@@ -21,26 +21,25 @@ fn main() -> io::Result<()> {
             let mut contents = String::new();
             file.read_to_string(&mut contents)?;
 
-            let (language, comment_start, comment_end) =
-                match path.extension().map(|ext| ext.to_str().unwrap_or("")) {
-                    Some("rs") => ("rust", "//", ""),
-                    Some("sh" | "bash") => ("bash", "#", ""),
-                    Some("py") => ("python", "#", ""),
-                    Some("js") => ("javascript", "//", ""),
-                    Some("ts") => ("typescript", "//", ""),
-                    Some("jsx") => ("jsx", "//", ""),
-                    Some("html") => ("html", "<!--", " -->"),
-                    Some("css") => ("css", "/*", " */"),
-                    Some("nix") => ("nix", "#", ""),
-                    _ => ("", "#", ""),
-                };
-
             let filename = path.file_name().unwrap().to_string_lossy();
+            let extension = path.extension().map(|ext| ext.to_str().unwrap());
 
-            println!("```{language}");
+            let (lang, comment_start, comment_end) = match extension {
+                Some("rs") => ("rust", "//", ""),
+                Some("sh") => ("bash", "#", ""),
+                Some("py") => ("python", "#", ""),
+                Some("js") => ("javascript", "//", ""),
+                Some("ts") => ("typescript", "//", ""),
+                Some("jsx") => ("jsx", "//", ""),
+                Some("html") => ("html", "<!--", " -->"),
+                Some("css") => ("css", "/*", " */"),
+                Some("nix") => ("nix", "#", ""),
+                _ => ("", "# ", ""),
+            };
+
+            println!("```{lang}");
             println!("{comment_start} {filename}{comment_end}");
-            println!("{contents}");
-            println!("```");
+            println!("{contents}```");
         }
     }
 
